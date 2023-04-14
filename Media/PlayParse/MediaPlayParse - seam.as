@@ -22,11 +22,10 @@
 // bool PlaylistCheck(const string &in)					-> check playlist
 // array<dictionary> PlaylistParse(const string &in)	-> parse playlist
 
-// 填写 seam 路径
-string seam;
 
+string seam;
 bool seamExists;
-bool debug = true;
+bool debug = false;
 
 void OnInitialize() {
 	if (debug) {
