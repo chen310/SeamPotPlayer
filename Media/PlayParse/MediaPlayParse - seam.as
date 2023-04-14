@@ -103,7 +103,7 @@ bool PlayitemCheck(const string &in path)
 		return true;
 	}
 	// 虎牙
-	if (!HostRegExpParse(path, "huya.com/([0-9]+)").empty()) {
+	if (!HostRegExpParse(path, "huya.com/([a-zA-Z0-9_-]+)").empty()) {
 		return true;
 	}
 	// 快手
@@ -208,7 +208,7 @@ string PlayitemParse(const string &in path, dictionary &MetaData, array<dictiona
 		return execSeam("douyin", rid, MetaData, QualityList);
 	}
 	if (path.find("huya.com") >= 0) {
-		rid = HostRegExpParse(path, "huya.com/([0-9]+)");
+		rid = HostRegExpParse(path, "huya.com/([a-zA-Z0-9_-]+)");
 		return execSeam("huya", rid, MetaData, QualityList);
 	}
 	if (path.find("live.kuaishou.com") >= 0) {
