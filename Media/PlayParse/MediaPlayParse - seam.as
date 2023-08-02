@@ -38,7 +38,7 @@ string GetTitle() {
 }
 
 string GetVersion() {
-	return "1.0";
+	return "1.1";
 }
 
 string GetDesc() {
@@ -162,19 +162,31 @@ bool PlayitemCheck(const string &in path)
 }
 
 string execSeam(string website, string rid, dictionary &MetaData, array<dictionary> &QualityList) {
-	log("exec: " + seam + " " + website + " " + rid);
-	string json = HostExecuteProgram(seam, website + " " + rid);
-	log("json: " + json);
+	string cmd = "-l " + website + " -i " + rid;
+	string json = HostExecuteProgram(seam, cmd);
 	JsonReader reader;
 	JsonValue root;
 	string url;
+	if (!reader.parse(json, root) || !root.isObject()) {
+		cmd = website + " " + rid;
+		json = HostExecuteProgram(seam, cmd);
+	}
+	log("exec: " + seam + " " + cmd);
+	log("json: " + json);
 	if (reader.parse(json, root) && root.isObject()) {
 		if (root["title"].isString()) {
 			MetaData["title"] = root["title"].asString();
 		}
-		if (root["nodes"].isArray() && @QualityList !is null) {
-			for (int i = 0; i < root["nodes"].size(); i++) {
-				JsonValue node = root["nodes"][i];
+		JsonValue list;
+		if (root["nodes"].isArray()) {
+			list = root["nodes"];
+		} else if (root["urls"].isArray()) {
+			list = root["urls"];
+		}
+		url = list[0]["url"].asString();
+		if (@QualityList !is null) {
+			for (int i = 0; i < list.size(); i++) {
+				JsonValue node = list[i];
 				dictionary item;
 				url = node["url"].asString();
 				item["url"] = url;
@@ -212,7 +224,7 @@ string PlayitemParse(const string &in path, dictionary &MetaData, array<dictiona
 		return execSeam("huya", rid, MetaData, QualityList);
 	}
 	if (path.find("live.kuaishou.com") >= 0) {
-		rid = HostRegExpParse(path, "live.kuaishou.com/u/([0-9]+)");
+		rid = HostRegExpParse(path, "live.kuaishou.com/u/([a-zA-Z0-9_-]+)");
 		return execSeam("kuaishou", rid, MetaData, QualityList);
 	}
 	if (path.find("cc.163.com") >= 0) {
