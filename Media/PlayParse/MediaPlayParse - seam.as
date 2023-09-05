@@ -161,21 +161,40 @@ bool PlayitemCheck(const string &in path)
 	return false;
 }
 
-string execSeam(string website, string rid, dictionary &MetaData, array<dictionary> &QualityList) {
-	string cmd = "-l " + website + " -i " + rid;
-	string json = HostExecuteProgram(seam, cmd);
+string execSeam(string website, string rid, dictionary &MetaData, array<dictionary> &QualityList, string path) {
 	JsonReader reader;
 	JsonValue root;
 	string url;
-	if (!reader.parse(json, root) || !root.isObject()) {
-		cmd = website + " " + rid;
+	string json;
+	string cmd;
+	array<string> cmds = {
+		"-l " + website + " -i " + rid + " -a",
+		"-l " + website + " -i " + rid,
+		website + " " + rid
+	};
+
+	for (int i = 0; i < cmds.length(); i++) {
+		cmd = cmds[i];
 		json = HostExecuteProgram(seam, cmd);
+		if (reader.parse(json, root) && root.isObject()) {
+			break;
+		}
 	}
 	log("exec: " + seam + " " + cmd);
 	log("json: " + json);
 	if (reader.parse(json, root) && root.isObject()) {
-		if (root["title"].isString()) {
+		if (root['anchor'].isString() && !root['anchor'].asString().empty()) {
+			MetaData["author"] = root['anchor'].asString();
+		}
+		if (root["title"].isString() && !root['title'].asString().empty()) {
 			MetaData["title"] = root["title"].asString();
+			MetaData["content"] = root["title"].asString();
+		}
+		MetaData["webUrl"] = path;
+		if (root["cover"].isString() && !root["cover"].asString().empty()) {
+			MetaData["thumbnail"] = root["cover"].asString();
+		} else if (root["head"].isString() && !root["head"].asString().empty()) {
+			MetaData["thumbnail"] = root["head"].asString();
 		}
 		JsonValue list;
 		if (root["nodes"].isArray()) {
@@ -206,80 +225,80 @@ string PlayitemParse(const string &in path, dictionary &MetaData, array<dictiona
 
 	if (path.find("live.bilibili.com") >= 0) {
 		rid = HostRegExpParse(path, "live.bilibili.com/([0-9]+)");
-		return execSeam("bili", rid, MetaData, QualityList);
+		return execSeam("bili", rid, MetaData, QualityList, path);
 	}
 	if (path.find("www.douyu.com") >= 0) {
 		rid = HostRegExpParse(path, "www.douyu.com/([0-9]+)");
 		if (rid.empty()) {
 			rid = HostRegExpParse(path, "www.douyu.com/.*?rid=([0-9]+)");
 		}
-		return execSeam("douyu", rid, MetaData, QualityList);
+		return execSeam("douyu", rid, MetaData, QualityList, path);
 	}
 	if (path.find("live.douyin.com") >= 0) {
 		rid = HostRegExpParse(path, "live.douyin.com/([0-9]+)");
-		return execSeam("douyin", rid, MetaData, QualityList);
+		return execSeam("douyin", rid, MetaData, QualityList, path);
 	}
 	if (path.find("huya.com") >= 0) {
 		rid = HostRegExpParse(path, "huya.com/([a-zA-Z0-9_-]+)");
-		return execSeam("huya", rid, MetaData, QualityList);
+		return execSeam("huya", rid, MetaData, QualityList, path);
 	}
 	if (path.find("live.kuaishou.com") >= 0) {
 		rid = HostRegExpParse(path, "live.kuaishou.com/u/([a-zA-Z0-9_-]+)");
-		return execSeam("kuaishou", rid, MetaData, QualityList);
+		return execSeam("kuaishou", rid, MetaData, QualityList, path);
 	}
 	if (path.find("cc.163.com") >= 0) {
 		rid = HostRegExpParse(path, "cc.163.com/([0-9]+)");
-		return execSeam("cc", rid, MetaData, QualityList);
+		return execSeam("cc", rid, MetaData, QualityList, path);
 	}
 	if (path.find("www.huajiao.com") >= 0) {
 		rid = HostRegExpParse(path, "www.huajiao.com/l/([0-9]+)");
-		return execSeam("huajiao", rid, MetaData, QualityList);
+		return execSeam("huajiao", rid, MetaData, QualityList, path);
 	}
 	if (path.find("www.173.com") >= 0) {
 		rid = HostRegExpParse(path, "www.173.com/([0-9]+)");
-		return execSeam("yqs", rid, MetaData, QualityList);
+		return execSeam("yqs", rid, MetaData, QualityList, path);
 	}
 	if (path.find("www.2cq.com") >= 0) {
 		rid = HostRegExpParse(path, "www.2cq.com/([0-9]+)");
-		return execSeam("mht", rid, MetaData, QualityList);
+		return execSeam("mht", rid, MetaData, QualityList, path);
 	}
 	if (path.find("www.kktv5.com") >= 0) {
 		rid = HostRegExpParse(path, "www.kktv5.com/show/([0-9]+)");
-		return execSeam("kk", rid, MetaData, QualityList);
+		return execSeam("kk", rid, MetaData, QualityList, path);
 	}
 	if (path.find("qf.56.com") >= 0) {
 		rid = HostRegExpParse(path, "qf.56.com/([0-9]+)");
-		return execSeam("qf", rid, MetaData, QualityList);
+		return execSeam("qf", rid, MetaData, QualityList, path);
 	}
 	if (path.find("now.qq.com") >= 0) {
 		rid = HostRegExpParse(path, "now.qq.com/pcweb/story.html.*?roomid=([0-9]+)");
-		return execSeam("now", rid, MetaData, QualityList);
+		return execSeam("now", rid, MetaData, QualityList, path);
 	}
 	if (path.find("www.inke.cn") >= 0) {
 		rid = HostRegExpParse(path, "www.inke.cn/liveroom/index.html.*?uid=([0-9]+)");
-		return execSeam("inke", rid, MetaData, QualityList);
+		return execSeam("inke", rid, MetaData, QualityList, path);
 	}
 	if (path.find("afreecatv.com") >= 0) {
 		rid = HostRegExpParse(path, "afreecatv.com/([a-zA-Z0-9_-]+)");
-		return execSeam("afreeca", rid, MetaData, QualityList);
+		return execSeam("afreeca", rid, MetaData, QualityList, path);
 	}
 	if (path.find("www.pandalive.co.kr") >= 0) {
 		rid = HostRegExpParse(path, "www.pandalive.co.kr/channel/([a-zA-Z0-9_-]+)");
 		if (rid.empty()) {
 			rid = HostRegExpParse(path, "www.pandalive.co.kr/live/play/([a-zA-Z0-9_-]+)");
 		}
-		return execSeam("panda", rid, MetaData, QualityList);
+		return execSeam("panda", rid, MetaData, QualityList, path);
 	}
 	if (path.find("www.flextv.co.kr") >= 0) {
 		rid = HostRegExpParse(path, "www.flextv.co.kr/channels/([0-9]+)");
-		return execSeam("flex", rid, MetaData, QualityList);
+		return execSeam("flex", rid, MetaData, QualityList, path);
 	}
 	if (path.find("www.winktv.co.kr") >= 0) {
 		rid = HostRegExpParse(path, "www.winktv.co.kr/channel/([a-zA-Z0-9_-]+)");
 		if (rid.empty()) {
 			rid = HostRegExpParse(path, "www.winktv.co.kr/live/play/([a-zA-Z0-9_-]+)");
 		}
-		return execSeam("wink", rid, MetaData, QualityList);
+		return execSeam("wink", rid, MetaData, QualityList, path);
 	}
 	return url;
 }
