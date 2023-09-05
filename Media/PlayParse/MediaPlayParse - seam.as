@@ -94,12 +94,12 @@ bool PlayitemCheck(const string &in path)
 	if (!HostRegExpParse(path, "live.bilibili.com/([0-9]+)").empty()) {
 		return true;
 	}
-	// 抖音
+	// 斗鱼
 	if (!HostRegExpParse(path, "www.douyu.com/([0-9]+)").empty() || !HostRegExpParse(path, "www.douyu.com/.*?rid=([0-9]+)").empty()) {
 		return true;
 	}
-	// 斗鱼
-	if (!HostRegExpParse(path, "live.douyin.com/([0-9]+)").empty()) {
+	// 抖音
+	if (!HostRegExpParse(path, "live.douyin.com/([a-zA-Z0-9_-]+)").empty()) {
 		return true;
 	}
 	// 虎牙
@@ -235,7 +235,7 @@ string PlayitemParse(const string &in path, dictionary &MetaData, array<dictiona
 		return execSeam("douyu", rid, MetaData, QualityList, path);
 	}
 	if (path.find("live.douyin.com") >= 0) {
-		rid = HostRegExpParse(path, "live.douyin.com/([0-9]+)");
+		rid = HostRegExpParse(path, "live.douyin.com/([a-zA-Z0-9_-]+)");
 		return execSeam("douyin", rid, MetaData, QualityList, path);
 	}
 	if (path.find("huya.com") >= 0) {
