@@ -167,7 +167,7 @@ string execSeam(string website, string rid, dictionary &MetaData, array<dictiona
 		}
 		url = list[0]["url"].asString();
 		if (@QualityList !is null) {
-			for (uint i = 0; i < list.size(); i++) {
+			for (int i = 0; i < list.size(); i++) {
 				JsonValue node = list[i];
 				dictionary item;
 				url = node["url"].asString();
@@ -193,4 +193,59 @@ string PlayitemParse(const string &in path, dictionary &MetaData, array<dictiona
 		}
 	}
 	return path;
+}
+
+string post(string url, string data="") {
+	string UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36";
+	string Headers = "Referer: https://www.douyin.com\r\n";
+	return HostUrlGetStringWithAPI(url, UserAgent, Headers, data, true);
+}
+
+array<dictionary> AsianGames() {
+	string res = post("https://www.douyin.com/aweme/v1/web/activity/yayun/match?tag=ALL&aid=6383");
+	array<dictionary> lives;
+	JsonReader Reader;
+	JsonValue Root;
+	if (res.empty()) {
+		return lives;
+	}
+	array<dictionary> temp;
+	if (Reader.parse(res, Root) && Root.isObject()) {
+		JsonValue days = Root["data"]["tag_match_info"];
+		for (int i = 0; i < days.size(); i++) {
+			JsonValue items = days[i]["content_items"];
+			for (int j = 0; j < items.size(); j++) {
+				JsonValue item = items[j];
+				if (item.isObject() && item["room_status"].isInt() && item["room_status"].asInt() == 2) {
+					dictionary live;
+					live["title"] = item["content_title"].asString();
+					live["url"] = "https://live.douyin.com/" + item["web_rid_str"].asString();
+					if (item["match_info"]["is_hot"].isBool() and item["match_info"]["is_hot"].asBool()) {
+						lives.insertLast(live);
+					} else {
+						temp.insertLast(live);
+					}
+				}
+			}
+		}
+		for (uint i = 0; i < temp.length(); i++) {
+			lives.insertLast(temp[i]);
+		}
+	}
+	return lives;
+}
+
+bool PlaylistCheck(const string &in path) {
+	if (path.find("www.douyin.com/asiangames") >= 0) {
+		return true;
+	}
+	return false;
+}
+
+array<dictionary> PlaylistParse(const string &in path) {
+	array<dictionary> result;
+	if (path.find("www.douyin.com/asiangames") >= 0) {
+		return AsianGames();
+	}
+	return result;
 }
